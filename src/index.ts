@@ -4,7 +4,7 @@ import * as github from '@actions/github';
 import axios from "axios";
 
 const wrikeConifg = {
-  url: "https://www.wrike.com/api/v4/",
+  url: "https://www.wrike.com/api/v4",
   token: core.getInput('WRIKE_ACCESS_TOKEN'),
   reviewState: core.getInput('WRIKE_IN_REVIEW_STATE_ID'),
   mergeState: core.getInput('WRIKE_MERGED_STATE_ID'),
@@ -69,15 +69,21 @@ const updateWrikeTicket = async (
 
   const { body, html_url } = payload.pull_request;
 
+  console.log(body);
+  console.log(html_url);
+
   if(body === undefined || html_url === undefined) {
     core.setFailed("PR does not contain a description. So no wrike ticket to find");
     return;
   }
 
   const wrikeUrls = await wrikeUrlsFromBody(body);
+  console.log(wrikeUrls);
 
   try {
     const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
+    console.log(wrikeIds);
+
     if (payload.pull_request.merged == true) {
       console.log('PR merged...');
 
