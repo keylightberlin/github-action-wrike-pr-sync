@@ -61,14 +61,7 @@ const updateWrikeTicket = async (
 }
 
 (async () => {
-  core.warning('👋 Hello! 🙌')
-  console.log('starting this fancy action');
   const payload = github.context.payload;
-
-  core.warning('github payload');
-  core.warning(JSON.stringify(payload));
-  core.warning(JSON.stringify(wrikeConifg));
-
 
   if (!payload.pull_request) {
     core.setFailed("This action is for pull request events. Please set 'on: pull_request' in your workflow");
@@ -76,11 +69,6 @@ const updateWrikeTicket = async (
   }
 
   const { body, html_url } = payload.pull_request;
-
-  core.warning(String(body));
-  core.warning(String(html_url));
-  core.warning(wrikeConifg.token);
-
   if(body === undefined || html_url === undefined) {
     core.setFailed("PR does not contain a description. So no wrike ticket to find");
     return;
@@ -99,28 +87,32 @@ const updateWrikeTicket = async (
     core.warning(wrikeIds.toString());
 
     if (payload.pull_request.merged == true) {
-      console.log('PR merged...');
-      console.log('Following IDs found:', wrikeIds);
+      core.warning('PR merged...');
+      core.warning(wrikeIds.toString());
 
       try {
-        await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
-        return;
+        await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.mergeState)));
       } catch (e) {
+        core.error(JSON.stringify(e));
         core.setFailed(e);
       }
+
       return;
     }
 
     try {
       await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
     } catch (e) {
+      core.error(JSON.stringify(e));
       core.setFailed(e);
     }
 
   } catch (e) {
+    core.error(JSON.stringify(e));
     core.setFailed(e);
     return;
   }
 })().catch((e) => {
+  core.error(JSON.stringify(e));
   core.setFailed(e);
 });
