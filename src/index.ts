@@ -61,13 +61,14 @@ const updateWrikeTicket = async (
 }
 
 (async () => {
+  core.debug('👋 Hello! 🙌')
   console.log('starting this fancy action');
   const payload = github.context.payload;
 
-  console.log('github payload');
-  console.log(payload);
+  core.debug('github payload');
+  core.debug(String(payload));
 
-  
+
   if (!payload.pull_request) {
     core.setFailed("This action is for pull request events. Please set 'on: pull_request' in your workflow");
     return;
@@ -75,8 +76,8 @@ const updateWrikeTicket = async (
 
   const { body, html_url } = payload.pull_request;
 
-  console.log(body);
-  console.log(html_url);
+  core.debug(String(body));
+  core.debug(String(html_url));
 
   if(body === undefined || html_url === undefined) {
     core.setFailed("PR does not contain a description. So no wrike ticket to find");
@@ -84,11 +85,11 @@ const updateWrikeTicket = async (
   }
 
   const wrikeUrls = await wrikeUrlsFromBody(body);
-  console.log(wrikeUrls);
+  core.debug(wrikeUrls.toString());
 
   try {
     const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
-    console.log(wrikeIds);
+    core.debug(wrikeIds.toString());
 
     if (payload.pull_request.merged == true) {
       console.log('PR merged...');
