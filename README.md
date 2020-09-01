@@ -53,3 +53,5 @@ jobs:
           WRIKE_IN_REVIEW_STATE_ID: ${{ secrets.WRIKE_IN_REVIEW_STATE_ID }}
           WRIKE_MERGED_STATE_ID: ${{ secrets.WRIKE_MERGED_STATE_ID }}
 ```
+
+https://github.com/grassedge/issue-backlink-to-wrike-action

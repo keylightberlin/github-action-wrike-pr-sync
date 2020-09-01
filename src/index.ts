@@ -4,7 +4,7 @@ import * as github from '@actions/github';
 import axios from "axios";
 
 const wrikeConifg = {
-  url: "https://www.wrike.com/api/v4/",
+  url: "https://www.wrike.com/api/v4",
   token: core.getInput('WRIKE_ACCESS_TOKEN'),
   reviewState: core.getInput('WRIKE_IN_REVIEW_STATE_ID'),
   mergeState: core.getInput('WRIKE_MERGED_STATE_ID'),
@@ -15,8 +15,6 @@ const apiClient = axios.create({
   headers: { 'Authorization': `bearer ${wrikeConifg.token}` },
 });
 
-
-
 const wrikeUrlsFromBody = (body: string): string[] => {
   const matched = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
   if (!matched) {
@@ -26,15 +24,13 @@ const wrikeUrlsFromBody = (body: string): string[] => {
   return matched;
 }
 
-/*
 const wrikeTaskIdFromUrl = async (url: string) => {
-  const res = await instance.request({
+  const res = await apiClient.request({
     url: `/tasks?permalink=${encodeURIComponent(url)}`,
   });
   const task = res.data.data[0];
   return task ? task.id : null
 }
-*/
 
 const updateWrikeTicket = async (
     id: string,
@@ -57,62 +53,66 @@ const updateWrikeTicket = async (
     method: 'put',
     data: {
       description: '<span style="background-color: #B0D300;">Pull-Request:</span> ' + pullRequestUrl + '<br /><br />' + description,
-      customFields: {
-        customStatus: newState,
-      },
+      customStatus: newState,
     },
   });
 }
 
-(async (evt) => {
+(async () => {
   const payload = github.context.payload;
+
   if (!payload.pull_request) {
     core.setFailed("This action is for pull request events. Please set 'on: pull_request' in your workflow");
     return;
   }
 
   const { body, html_url } = payload.pull_request;
-
   if(body === undefined || html_url === undefined) {
-    core.setFailed("PR does not contain a description. So no wrike ticket to find");
+    core.setFailed("PR does not contain a Wrike link");
     return;
   }
 
-  const wrikeIds = await wrikeUrlsFromBody(body);
-  console.log(wrikeIds);
-  // @todo what's in there?
+  const wrikeUrls = await wrikeUrlsFromBody(body);
+  if (wrikeUrls.length === 0) {
+    core.setFailed("PR does not contain a Wrike link");
+    return
+  }
 
+  try {
+    const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
+    core.warning(wrikeIds.toString());
 
-  if (payload.pull_request.merged == true) {
-    // @todo update the wrike ticket to the merged state
-    console.log('PR merged...');
+    if (payload.pull_request.merged == true) {
+      core.warning('PR merged...');
+      core.warning(wrikeIds.toString());
+
+      try {
+        await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.mergeState)));
+      } catch (e) {
+        core.error(e.message);
+        core.error(JSON.stringify(e));
+        core.setFailed(e);
+      }
+
+      return;
+    }
 
     try {
-      await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.mergeState)));
+      await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
     } catch (e) {
+      core.error(e.message);
+      core.error(JSON.stringify(e));
       core.setFailed(e);
     }
 
+  } catch (e) {
+    core.error(e.message);
+    core.error(JSON.stringify(e));
+    core.setFailed(e);
     return;
   }
-
-  // @todo new PR case
-
-  console.log(evt);
-
-
-  console.log(body);
-  console.log(html_url);
-  console.log(payload.pull_request);
-
-
-  // @todo is this a new PR or merge?
-
-  try {
-    await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
-  } catch (e) {
-    core.setFailed(e);
-  }
 })().catch((e) => {
+  core.error(e.message);
+  core.error(JSON.stringify(e));
   core.setFailed(e);
 });
