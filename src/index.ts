@@ -86,6 +86,12 @@ const updateWrikeTicket = async (
 
   const wrikeUrls = await wrikeUrlsFromBody(body);
   core.debug(wrikeUrls.toString());
+  core.warning(wrikeUrls.toString());
+
+  if (wrikeUrls.length === 0) {
+    core.setFailed("PR does not contain a Wrike link");
+    return
+  }
 
   try {
     const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
@@ -93,6 +99,7 @@ const updateWrikeTicket = async (
 
     if (payload.pull_request.merged == true) {
       console.log('PR merged...');
+      console.log('Folling IDs found:', wrikeIds);
 
       try {
         await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
