@@ -15,8 +15,6 @@ const apiClient = axios.create({
   headers: { 'Authorization': `bearer ${wrikeConifg.token}` },
 });
 
-
-
 const wrikeUrlsFromBody = (body: string): string[] => {
   const matched = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
   if (!matched) {
@@ -26,15 +24,13 @@ const wrikeUrlsFromBody = (body: string): string[] => {
   return matched;
 }
 
-/*
 const wrikeTaskIdFromUrl = async (url: string) => {
-  const res = await instance.request({
+  const res = await apiClient.request({
     url: `/tasks?permalink=${encodeURIComponent(url)}`,
   });
   const task = res.data.data[0];
   return task ? task.id : null
 }
-*/
 
 const updateWrikeTicket = async (
     id: string,
@@ -64,7 +60,7 @@ const updateWrikeTicket = async (
   });
 }
 
-(async (evt) => {
+(async () => {
   const payload = github.context.payload;
   if (!payload.pull_request) {
     core.setFailed("This action is for pull request events. Please set 'on: pull_request' in your workflow");
@@ -78,40 +74,31 @@ const updateWrikeTicket = async (
     return;
   }
 
-  const wrikeIds = await wrikeUrlsFromBody(body);
-  console.log(wrikeIds);
-  // @todo what's in there?
+  const wrikeUrls = await wrikeUrlsFromBody(body);
 
+  try {
+    const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
+    if (payload.pull_request.merged == true) {
+      console.log('PR merged...');
 
-  if (payload.pull_request.merged == true) {
-    // @todo update the wrike ticket to the merged state
-    console.log('PR merged...');
+      try {
+        await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
+        return;
+      } catch (e) {
+        core.setFailed(e);
+      }
+      return;
+    }
 
     try {
-      await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.mergeState)));
+      await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
     } catch (e) {
       core.setFailed(e);
     }
 
-    return;
-  }
-
-  // @todo new PR case
-
-  console.log(evt);
-
-
-  console.log(body);
-  console.log(html_url);
-  console.log(payload.pull_request);
-
-
-  // @todo is this a new PR or merge?
-
-  try {
-    await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
   } catch (e) {
     core.setFailed(e);
+    return;
   }
 })().catch((e) => {
   core.setFailed(e);
