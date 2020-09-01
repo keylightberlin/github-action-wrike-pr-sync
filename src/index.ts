@@ -61,7 +61,13 @@ const updateWrikeTicket = async (
 }
 
 (async () => {
+  console.log('starting this fancy action');
   const payload = github.context.payload;
+
+  console.log('github payload');
+  console.log(payload);
+
+  
   if (!payload.pull_request) {
     core.setFailed("This action is for pull request events. Please set 'on: pull_request' in your workflow");
     return;
