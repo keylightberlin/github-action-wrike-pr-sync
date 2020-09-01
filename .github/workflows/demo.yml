@@ -10,5 +10,5 @@ jobs:
         uses: keylightberlin/github-action-wrike-pr-sync@v1
         env:
           WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}
-          WRIKE_IN_REVIEW_STATE: 'In Review'
-          WRIKE_MERGED_STATE: 'Ready for QA'
+          WRIKE_IN_REVIEW_STATE_ID: 'IEABSXEZJMAAAAAA'
+          WRIKE_MERGED_STATE_ID: 'IEABSXEZJMANNHJW'

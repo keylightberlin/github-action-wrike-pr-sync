@@ -6,8 +6,8 @@ import axios from "axios";
 const wrikeConifg = {
   url: "https://www.wrike.com/api/v4/",
   token: core.getInput('WRIKE_ACCESS_TOKEN'),
-  reviewState: core.getInput('WRIKE_IN_REVIEW_STATE'),
-  mergeState: core.getInput('WRIKE_MERGED_STATE'),
+  reviewState: core.getInput('WRIKE_IN_REVIEW_STATE_ID'),
+  mergeState: core.getInput('WRIKE_MERGED_STATE_ID'),
 };
 
 const apiClient = axios.create({

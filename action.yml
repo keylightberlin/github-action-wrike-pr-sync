@@ -4,11 +4,11 @@ inputs:
   WRIKE_ACCESS_TOKEN:
     description: 'Your permanent wrike api token.'
     required: true
-  WRIKE_IN_REVIEW_STATE:
-    description: 'Your "In Review" ticket state in Wrike.'
+  WRIKE_IN_REVIEW_STATE_ID:
+    description: 'Your "In Review" ticket state ID in Wrike.'
     required: true
-  WRIKE_MERGED_STATE:
-    description: 'Your "After merge" ticket state in Wrike.'
+  WRIKE_MERGED_STATE_ID:
+    description: 'Your "After merge" ticket state ID in Wrike.'
     required: true
 runs:
   using: 'node12'

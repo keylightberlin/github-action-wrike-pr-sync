@@ -6,6 +6,15 @@ As soon as your PR is merged your ticket will be updated to the next applicable 
 
 see here for more information on the Wrike API: https://developers.wrike.com/
 
+## Setup 
+Wrike expects status IDs for task updates. You can fetch your workflow via the wrike API:
+
+```
+curl -g -X GET -H 'Authorization: bearer ${WRIKE_ACCESS_TOKEN}' 'https://www.wrike.com/api/v4/workflows'
+```
+
+The response contains your status definitions.
+
 
 ## Inputs
 
@@ -14,14 +23,14 @@ see here for more information on the Wrike API: https://developers.wrike.com/
 **Required** Your permanent wrike API token.
 
 
-### `WRIKE_IN_REVIEW_STATE`
+### `WRIKE_IN_REVIEW_STATE_ID`
 
-**Required** The name of your `In Review` state
+**Required** The ID of your `In Review` state.
 
 
-### `WRIKE_MERGED_STATE`
+### `WRIKE_MERGED_STATE_ID`
 
-**Required** The name of your `After merge` state. E.g. `Ready for QA`
+**Required** The ID of your `After merge` state.
 
 
 ## Example usage
@@ -41,6 +50,6 @@ jobs:
       uses: keylightberlin/github-action-wrike-pr-sync@v1.0.0
       env:
         WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}
-        WRIKE_IN_REVIEW_STATE: 'In Review'
-        WRIKE_MERGED_STATE: 'Ready for QA'
+        WRIKE_IN_REVIEW_STATE_ID: 'IEABSXEZJMAAAAAA'
+        WRIKE_MERGED_STATE_ID: 'IEABSXEZJMANNHJW'
 ```
