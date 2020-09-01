@@ -46,10 +46,10 @@ jobs:
   issue-backlink-to-wrike:
     runs-on: ubuntu-latest
     steps:
-    - name: Add PR link to wrike task and update status.
-      uses: keylightberlin/github-action-wrike-pr-sync@v1.0.0
-      env:
-        WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}
-        WRIKE_IN_REVIEW_STATE_ID: 'IEABSXEZJMAAAAAA'
-        WRIKE_MERGED_STATE_ID: 'IEABSXEZJMANNHJW'
+      - name: Add PR link to wrike task and update status.
+        uses: keylightberlin/github-action-wrike-pr-sync@v1
+        env:
+          WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}
+          WRIKE_IN_REVIEW_STATE_ID: ${{ secrets.WRIKE_IN_REVIEW_STATE_ID }}
+          WRIKE_MERGED_STATE_ID: ${{ secrets.WRIKE_MERGED_STATE_ID }}
 ```
