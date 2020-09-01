@@ -61,12 +61,12 @@ const updateWrikeTicket = async (
 }
 
 (async () => {
-  core.debug('👋 Hello! 🙌')
+  core.warning('👋 Hello! 🙌')
   console.log('starting this fancy action');
   const payload = github.context.payload;
 
-  core.debug('github payload');
-  core.debug(String(payload));
+  core.warning('github payload');
+  core.warning(String(payload));
 
 
   if (!payload.pull_request) {
@@ -76,8 +76,9 @@ const updateWrikeTicket = async (
 
   const { body, html_url } = payload.pull_request;
 
-  core.debug(String(body));
-  core.debug(String(html_url));
+  core.warning(String(body));
+  core.warning(String(html_url));
+  core.warning(wrikeConifg.token);
 
   if(body === undefined || html_url === undefined) {
     core.setFailed("PR does not contain a description. So no wrike ticket to find");
@@ -85,7 +86,6 @@ const updateWrikeTicket = async (
   }
 
   const wrikeUrls = await wrikeUrlsFromBody(body);
-  core.debug(wrikeUrls.toString());
   core.warning(wrikeUrls.toString());
 
   if (wrikeUrls.length === 0) {
@@ -95,11 +95,11 @@ const updateWrikeTicket = async (
 
   try {
     const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
-    core.debug(wrikeIds.toString());
+    core.warning(wrikeIds.toString());
 
     if (payload.pull_request.merged == true) {
       console.log('PR merged...');
-      console.log('Folling IDs found:', wrikeIds);
+      console.log('Following IDs found:', wrikeIds);
 
       try {
         await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
