@@ -66,7 +66,8 @@ const updateWrikeTicket = async (
   const payload = github.context.payload;
 
   core.warning('github payload');
-  core.warning(String(payload));
+  core.warning(JSON.stringify(payload));
+  core.warning(JSON.stringify(wrikeConifg));
 
 
   if (!payload.pull_request) {
