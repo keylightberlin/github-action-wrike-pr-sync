@@ -1,0 +1,24 @@
+{
+  "name": "github-action-wrike-pr-sync",
+  "version": "1.0.0",
+  "description": "github action for updating wrike task based on github PRs",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "ncc build src/index.ts --minify"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^12.12.54",
+    "@zeit/ncc": "^0.22.3",
+    "prettier": "^2.1.1",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.5",
+    "@actions/github": "^1.1.0",
+    "axios": "^0.19.2"
+  }
+}
