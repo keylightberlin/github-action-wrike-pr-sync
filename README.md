@@ -46,7 +46,7 @@ jobs:
   issue-backlink-to-wrike:
     runs-on: ubuntu-latest
     steps:
-    - name: Issue backlink to wrike
+    - name: Add PR link to wrike task and update status.
       uses: keylightberlin/github-action-wrike-pr-sync@v1.0.0
       env:
         WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}

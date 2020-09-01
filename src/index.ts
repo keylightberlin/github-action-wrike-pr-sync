@@ -56,7 +56,7 @@ const updateWrikeTicket = async (
     url: `/tasks/${id}`,
     method: 'put',
     data: {
-      description: '<span style="background-color: #966AF0;">Pull-Request:</span> ' + pullRequestUrl + '<br /><br />' + description,
+      description: '<span style="background-color: #B0D300;">Pull-Request:</span> ' + pullRequestUrl + '<br /><br />' + description,
       customFields: {
         customStatus: newState,
       },
