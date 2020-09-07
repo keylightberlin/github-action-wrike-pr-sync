@@ -16,7 +16,7 @@ const apiClient = axios.create({
 });
 
 const wrikeUrlsFromBody = (body: string): string[] => {
-  const matched = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
+  const matched = body.match(/https:\/\/www.wrike.com\/open.htm?id=(\d+)/g);
   if (!matched) {
     return [];
   }
