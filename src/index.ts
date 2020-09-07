@@ -25,8 +25,6 @@ const wrikeUrlsFromBody = (body: string): string[] => {
 }
 
 const wrikeTaskIdFromUrl = async (url: string) => {
-  core.warning(`/tasks?permalink=${encodeURIComponent(url)}`);
-
   const res = await apiClient.request({
     url: `/tasks?permalink=${encodeURIComponent(url)}`,
   });
@@ -55,9 +53,7 @@ const updateWrikeTicket = async (
     method: 'put',
     data: {
       description: '<span style="background-color: #B0D300;">Pull-Request:</span> ' + pullRequestUrl + '<br /><br />' + description,
-      customFields: {
-        customStatus: newState,
-      },
+      customStatus: newState,
     },
   });
 }
@@ -98,6 +94,7 @@ const updateWrikeTicket = async (
       try {
         await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.mergeState)));
       } catch (e) {
+        core.error(e.message);
         core.error(JSON.stringify(e));
         core.setFailed(e);
       }
@@ -108,16 +105,19 @@ const updateWrikeTicket = async (
     try {
       await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
     } catch (e) {
+      core.error(e.message);
       core.error(JSON.stringify(e));
       core.setFailed(e);
     }
 
   } catch (e) {
+    core.error(e.message);
     core.error(JSON.stringify(e));
     core.setFailed(e);
     return;
   }
 })().catch((e) => {
+  core.error(e.message);
   core.error(JSON.stringify(e));
   core.setFailed(e);
 });
