@@ -16,7 +16,7 @@ const apiClient = axios.create({
 });
 
 const wrikeUrlsFromBody = (body: string): string[] => {
-  const matched = body.match(/https:\/\/www.wrike.com\/open.htm?id=(\d+)/g);
+  const matched = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
   if (!matched) {
     return [];
   }
@@ -25,6 +25,8 @@ const wrikeUrlsFromBody = (body: string): string[] => {
 }
 
 const wrikeTaskIdFromUrl = async (url: string) => {
+  core.warning(`/tasks?permalink=${encodeURIComponent(url)}`);
+
   const res = await apiClient.request({
     url: `/tasks?permalink=${encodeURIComponent(url)}`,
   });
@@ -78,6 +80,9 @@ const updateWrikeTicket = async (
   core.warning(wrikeUrls.toString());
 
   if (wrikeUrls.length === 0) {
+    core.warning(JSON.stringify(wrikeUrls));
+    // @todo escaped url?
+
     core.setFailed("PR does not contain a Wrike link");
     return
   }
