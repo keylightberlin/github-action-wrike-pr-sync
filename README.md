@@ -47,8 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add PR link to wrike task and update status.
-        uses: keylightberlin/github-action-wrike-pr-sync@v1
-        env:
+        uses: keylightberlin/github-action-wrike-pr-sync@v0.15
+        with:
           WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}
           WRIKE_IN_REVIEW_STATE_ID: ${{ secrets.WRIKE_IN_REVIEW_STATE_ID }}
           WRIKE_MERGED_STATE_ID: ${{ secrets.WRIKE_MERGED_STATE_ID }}
