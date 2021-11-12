@@ -47,9 +47,12 @@ const updateWrikeTicket = async (taskId: string, pullRequestUrl: string, state: 
   core.info(`Setting task ${taskId} to ${state}.`);
   
   const { description } = await getTask(taskId);
+  core.info(`Current description is: ${description}`);
+
   const style = `style="color: ${colors[state].font}; background-color: ${colors[state].background}"`;
   const pullRequest = `${pullRequestUrl} [${state.toUpperCase()}]`;
   const newState = `<span id="github-action-wrike-pr-sync" ${style}>${pullRequest}</span><br />`;
+
 
   const regexp = new RegExp(`<span id="github-action-wrike-pr-sync".*>${pullRequestUrl}.*</span><br />`);
   const updatedDescription = description.includes(pullRequestUrl)
