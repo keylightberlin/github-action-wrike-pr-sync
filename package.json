@@ -19,6 +19,7 @@
   "dependencies": {
     "@actions/core": "^1.2.5",
     "@actions/github": "^1.1.0",
+    "@octokit/webhooks-definitions": "^3.67.3",
     "axios": "^0.19.2"
   }
 }

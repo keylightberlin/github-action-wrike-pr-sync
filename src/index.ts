@@ -1,116 +1,86 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 
 import axios from "axios";
 
-const wrikeConifg = {
+const wrikeConfig = {
   url: "https://www.wrike.com/api/v4",
   token: core.getInput('WRIKE_ACCESS_TOKEN'),
-  reviewState: core.getInput('WRIKE_IN_REVIEW_STATE_ID'),
-  mergeState: core.getInput('WRIKE_MERGED_STATE_ID'),
 };
 
 const apiClient = axios.create({
-  baseURL: wrikeConifg.url,
-  headers: { 'Authorization': `bearer ${wrikeConifg.token}` },
+  baseURL: wrikeConfig.url,
+  headers: { 'Authorization': `bearer ${wrikeConfig.token}` },
 });
 
-const wrikeUrlsFromBody = (body: string): string[] => {
-  const matched = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
-  if (!matched) {
-    return [];
+const getTask = async (taskId: string) => (await apiClient.request({ url: `/tasks/${taskId}` })).data.data[0];
+const setTask = async (taskId: string, data: object) => await apiClient.request({ url: `/tasks/${taskId}`, method: 'put', data });
+
+const colors = {
+  draft: {
+    background: 'transparent',
+    font: 'gray'
+  },
+  open: {
+    background: '#2da44e',
+    font: 'white'
+  },
+  merged: {
+    background: '#8250df',
+    font: 'white',
+  },
+  closed: {
+    background: '#cf222e',
+    font: 'white',
   }
+};
 
-  return matched;
+const wrikeTaskIdFromUrl = async (id: string): Promise<string> => {
+  const url = `/tasks?permalink=${encodeURIComponent(id)}`;
+  const response = await apiClient.request({ url });
+  const task = response.data.data[0];
+  return task.id;
 }
 
-const wrikeTaskIdFromUrl = async (url: string) => {
-  const res = await apiClient.request({
-    url: `/tasks?permalink=${encodeURIComponent(url)}`,
-  });
-  const task = res.data.data[0];
-  return task ? task.id : null
+const updateWrikeTicket = async (taskId: string, pullRequestUrl: string, state: State) => {
+  const { description } = await getTask(taskId);
+  const style = `style="color: ${colors[state].font}; background-color: ${colors[state].background}"`;
+  const pullRequest = `${pullRequestUrl} [${state.toUpperCase()}]`;
+  const newState = `<div id="github-action-wrike-pr-sync" ${style}>${pullRequest}</div><br />`
+
+  const regexp = new RegExp(`<div id="github-action-wrike-pr-sync".*>${pullRequestUrl}.*</div><br />`);
+  const updatedDescription = description.includes(pullRequestUrl)
+    ? description.replace(regexp, newState)
+    : newState + description;
+
+  await setTask(taskId, { description: updatedDescription });
 }
 
-const updateWrikeTicket = async (
-    id: string,
-    pullRequestUrl: string,
-    newState: string,
-) => {
-  const res = await apiClient.request({
-    url: `/tasks/${id}`,
-  });
-  const task = res.data.data[0];
-  const description = task.description;
+const error = (message: string): void => core.setFailed(message);
 
-  if (description.indexOf(pullRequestUrl) != -1) { // pullreq url has already been linked.
-    console.log('pullreq url: ' + pullRequestUrl + ' has already been linked.')
-    return;
-  }
-
-  await apiClient.request({
-    url: `/tasks/${id}`,
-    method: 'put',
-    data: {
-      description: '<span style="background-color: #B0D300;">Pull-Request:</span> ' + pullRequestUrl + '<br /><br />' + description,
-      customStatus: newState,
-    },
-  });
-}
+type State = 'draft' | 'open' | 'merged' | 'closed';
 
 (async () => {
-  const payload = github.context.payload;
+  const payload = github.context.payload as PullRequestEvent;
+  const { pull_request } = payload;
+  if (!pull_request) return error('Not a pull request.');
+  const { body, html_url, merged, draft, state } = pull_request;
+  if (!html_url) return error('Could not determine PR URL.');
+  if (!body) return error('Missing description.');
+  const wrikeUrls = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
+  if (!wrikeUrls) return error('PR does not contain a Wrike link.');
 
-  if (!payload.pull_request) {
-    core.setFailed("This action is for pull request events. Please set 'on: pull_request' in your workflow");
-    return;
-  }
+  const wrikeIds = await Promise.all(wrikeUrls.map(wrikeTaskIdFromUrl));
+  core.warning(wrikeIds.toString());
 
-  const { body, html_url } = payload.pull_request;
-  if(body === undefined || html_url === undefined) {
-    core.setFailed("PR does not contain a Wrike link");
-    return;
-  }
+  const update = (state: State) => Promise.all(wrikeIds.map(id => updateWrikeTicket(id, html_url, state)));
 
-  const wrikeUrls = await wrikeUrlsFromBody(body);
-  if (wrikeUrls.length === 0) {
-    core.setFailed("PR does not contain a Wrike link");
-    return
-  }
+  if (merged) await update('merged')
+  else if (state === 'closed') await update('closed')
+  else if (draft) await update('draft')
+  else await update('open');
 
-  try {
-    const wrikeIds = await Promise.all(wrikeUrls.map(url => wrikeTaskIdFromUrl(url)));
-    core.warning(wrikeIds.toString());
-
-    if (payload.pull_request.merged == true) {
-      core.warning('PR merged...');
-      core.warning(wrikeIds.toString());
-
-      try {
-        await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.mergeState)));
-      } catch (e) {
-        core.error(e.message);
-        core.error(JSON.stringify(e));
-        core.setFailed(e);
-      }
-
-      return;
-    }
-
-    try {
-      await Promise.all(wrikeIds.map((id) => updateWrikeTicket(id, html_url, wrikeConifg.reviewState)));
-    } catch (e) {
-      core.error(e.message);
-      core.error(JSON.stringify(e));
-      core.setFailed(e);
-    }
-
-  } catch (e) {
-    core.error(e.message);
-    core.error(JSON.stringify(e));
-    core.setFailed(e);
-    return;
-  }
 })().catch((e) => {
   core.error(e.message);
   core.error(JSON.stringify(e));

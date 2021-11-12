@@ -27,12 +27,6 @@ The response contains your status definitions.
 
 **Required** The ID of your `In Review` state.
 
-
-### `WRIKE_MERGED_STATE_ID`
-
-**Required** The ID of your `After merge` state.
-
-
 ## Example usage
 Usage
 This Action subscribes to Pull request events which fire whenever pull requests are created.
@@ -41,17 +35,16 @@ This Action subscribes to Pull request events which fire whenever pull requests 
 name: Update wrike tasks based on Github PRs.
 on:
   pull_request:
-    types: [opened, closed]
+    types: [opened, reopened, closed, converted_to_draft, ready_for_review]
 jobs:
   issue-backlink-to-wrike:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Add PR link to wrike task and update status.
-        uses: keylightberlin/github-action-wrike-pr-sync@v0.15
+        uses: keylightberlin/github-action-wrike-pr-sync@v1.00.0
         with:
           WRIKE_ACCESS_TOKEN: ${{ secrets.WRIKE_ACCESS_TOKEN }}
-          WRIKE_IN_REVIEW_STATE_ID: ${{ secrets.WRIKE_IN_REVIEW_STATE_ID }}
-          WRIKE_MERGED_STATE_ID: ${{ secrets.WRIKE_MERGED_STATE_ID }}
+
 ```
 
-https://github.com/grassedge/issue-backlink-to-wrike-action
+Original source: https://github.com/grassedge/issue-backlink-to-wrike-action
