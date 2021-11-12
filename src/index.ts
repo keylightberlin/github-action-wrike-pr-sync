@@ -44,12 +44,14 @@ const wrikeTaskIdFromUrl = async (id: string): Promise<string> => {
 }
 
 const updateWrikeTicket = async (taskId: string, pullRequestUrl: string, state: State) => {
+  core.info(`Setting task ${taskId} to ${state}.`);
+  
   const { description } = await getTask(taskId);
   const style = `style="color: ${colors[state].font}; background-color: ${colors[state].background}"`;
   const pullRequest = `${pullRequestUrl} [${state.toUpperCase()}]`;
-  const newState = `<div id="github-action-wrike-pr-sync" ${style}>${pullRequest}</div><br />`
+  const newState = `<span id="github-action-wrike-pr-sync" ${style}>${pullRequest}</span><br />`;
 
-  const regexp = new RegExp(`<div id="github-action-wrike-pr-sync".*>${pullRequestUrl}.*</div><br />`);
+  const regexp = new RegExp(`<span id="github-action-wrike-pr-sync".*>${pullRequestUrl}.*</span><br />`);
   const updatedDescription = description.includes(pullRequestUrl)
     ? description.replace(regexp, newState)
     : newState + description;
