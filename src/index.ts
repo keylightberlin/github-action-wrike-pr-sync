@@ -18,22 +18,10 @@ const getTask = async (taskId: string) => (await apiClient.request({ url: `/task
 const setTask = async (taskId: string, data: object) => await apiClient.request({ url: `/tasks/${taskId}`, method: 'put', data });
 
 const colors = {
-  draft: {
-    background: 'transparent',
-    font: 'gray'
-  },
-  open: {
-    background: '#2da44e',
-    font: 'white'
-  },
-  merged: {
-    background: '#8250df',
-    font: 'white',
-  },
-  closed: {
-    background: '#cf222e',
-    font: 'white',
-  }
+  draft: 'gray',
+  open: '#2da44e',
+  merged: '#8250df',
+  closed: '#cf222e',
 };
 
 const wrikeTaskIdFromUrl = async (id: string): Promise<string> => {
@@ -43,18 +31,23 @@ const wrikeTaskIdFromUrl = async (id: string): Promise<string> => {
   return task.id;
 }
 
+const colorSpan = (color: string, inner: string) => `<span style="color: ${color};">${inner}</span>`;
+const backgroundSpan = (color: string, inner: string) => `<span style="background-color: ${color};">${inner}</span>`;
+
 const updateWrikeTicket = async (taskId: string, { html_url, number, title }: PullRequest, state: State) => {
   core.info(`Setting task ${taskId} to ${state}.`);
   
   const { description } = await getTask(taskId);
   core.info(`Current description is: ${description}`);
 
-  const style = `style="color: ${colors[state].font}; background-color: ${colors[state].background}"`;
-  const pullRequestText = `${number}: ${title} [${state.toUpperCase()}]`;
-  const newState = `<a href="${html_url}" ${style}>${pullRequestText}</a><br />`;
+  const color = colors[state];
+
+  const prDescription = colorSpan(color, `Pull request ${number}: ${title}`);
+  const prStateLabel = backgroundSpan(color, colorSpan('white', `[${state.toUpperCase()}]`));
+  const newState = `<a href="${html_url}">${prDescription} ${prStateLabel}</a><br />`;
 
 
-  const regexp = new RegExp(`<a href="${html_url}".*</a><br />`);
+  const regexp = new RegExp(`<a href="${html_url}">.*</a><br />`);
   const updatedDescription = description.includes(html_url)
     ? description.replace(regexp, newState)
     : newState + description;
