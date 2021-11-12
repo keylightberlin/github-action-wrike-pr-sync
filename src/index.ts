@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
+import { PullRequest, PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 
 import axios from "axios";
 
@@ -43,19 +43,19 @@ const wrikeTaskIdFromUrl = async (id: string): Promise<string> => {
   return task.id;
 }
 
-const updateWrikeTicket = async (taskId: string, pullRequestUrl: string, state: State) => {
+const updateWrikeTicket = async (taskId: string, { html_url, number, title }: PullRequest, state: State) => {
   core.info(`Setting task ${taskId} to ${state}.`);
   
   const { description } = await getTask(taskId);
   core.info(`Current description is: ${description}`);
 
   const style = `style="color: ${colors[state].font}; background-color: ${colors[state].background}"`;
-  const pullRequest = `${pullRequestUrl} [${state.toUpperCase()}]`;
-  const newState = `<span id="github-action-wrike-pr-sync" ${style}>${pullRequest}</span><br />`;
+  const pullRequestText = `${number}: ${title} [${state.toUpperCase()}]`;
+  const newState = `<a href="${html_url}" ${style}>${pullRequestText}</a><br />`;
 
 
-  const regexp = new RegExp(`<span id="github-action-wrike-pr-sync".*>${pullRequestUrl}.*</span><br />`);
-  const updatedDescription = description.includes(pullRequestUrl)
+  const regexp = new RegExp(`<a href="${html_url}".*</a><br />`);
+  const updatedDescription = description.includes(html_url)
     ? description.replace(regexp, newState)
     : newState + description;
 
@@ -69,9 +69,8 @@ type State = 'draft' | 'open' | 'merged' | 'closed';
 (async () => {
   const payload = github.context.payload as PullRequestEvent;
   const { pull_request } = payload;
-  if (!pull_request) return error('Not a pull request.');
-  const { body, html_url, merged, draft, state } = pull_request;
-  if (!html_url) return error('Could not determine PR URL.');
+  if (!pull_request) throw Error('Not a pull request.');
+  const { body, merged, draft, state } = pull_request;
   if (!body) return error('Missing description.');
   const wrikeUrls = body.match(/https:\/\/www.wrike.com\/open.htm\?id=(\d+)/g);
   if (!wrikeUrls) return error('PR does not contain a Wrike link.');
@@ -79,7 +78,7 @@ type State = 'draft' | 'open' | 'merged' | 'closed';
   const wrikeIds = await Promise.all(wrikeUrls.map(wrikeTaskIdFromUrl));
   core.warning(wrikeIds.toString());
 
-  const update = (state: State) => Promise.all(wrikeIds.map(id => updateWrikeTicket(id, html_url, state)));
+  const update = (state: State) => Promise.all(wrikeIds.map(id => updateWrikeTicket(id, pull_request, state)));
 
   if (merged) await update('merged')
   else if (state === 'closed') await update('closed')
