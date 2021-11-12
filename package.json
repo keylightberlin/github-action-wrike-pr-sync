@@ -10,14 +10,14 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^12.12.54",
+    "@types/node": "^12.20.37",
     "@zeit/ncc": "^0.22.3",
-    "prettier": "^2.1.1",
+    "prettier": "^2.4.1",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.10"
   },
   "dependencies": {
-    "@actions/core": "^1.2.5",
+    "@actions/core": "^1.6.0",
     "@actions/github": "^1.1.0",
     "@octokit/webhooks-definitions": "^3.67.3",
     "axios": "^0.19.2"
