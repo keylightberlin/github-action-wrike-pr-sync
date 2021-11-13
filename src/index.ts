@@ -48,11 +48,12 @@ const updateWrikeTicket = async (taskId: string, { html_url, number, title }: Pu
   const newState = `<a href="${html_url}">${prDescription}</a>${prStateLabel}<br />`;
 
 
-  const regexp = new RegExp(`<a href="${html_url}">.*?</span><br />`);
+  const regexp = new RegExp(`<a href="${html_url}">.*?</span><br />`, 'g');
   const updatedDescription = description.includes(html_url)
-    ? description.replace(regexp, newState)
+    ? description.replaceAll(regexp, newState)
     : newState + description;
 
+  core.info(`Updating description to: ${updatedDescription}`);
   await setTask(taskId, { description: updatedDescription });
 }
 
