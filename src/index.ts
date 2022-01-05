@@ -28,6 +28,7 @@ const colors = {
 const wrikeTaskIdFromUrl = async (id: string): Promise<string> => {
   const url = `/tasks?permalink=${encodeURIComponent(id)}`;
   const response = await apiClient.request({ url });
+  core.warning('wrike response was', response.data);
   const task = response.data.data[0];
   return task.id;
 }
